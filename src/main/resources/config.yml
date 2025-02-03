@@ -1,3 +1,3 @@
-minDistance = 10
-message = "<red><player>, the claim you have made is too close to another claim! The other player needs to trust you in order for you to do this!"
-allowableTrustLevels = []
+minDistance: 32
+message: "<red><player>, the claim you have made is too close to another claim! The other player needs to trust you in order for you to do this!"
+allowableTrustLevels: []

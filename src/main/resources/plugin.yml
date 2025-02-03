@@ -2,3 +2,5 @@ name: MinClaimDistance
 version: '${version}'
 main: me.xemor.minclaimdistance.MinClaimDistance
 api-version: '1.21'
+depend:
+  - HuskClaims
