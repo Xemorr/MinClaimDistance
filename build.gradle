@@ -15,10 +15,12 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven { url 'https://repo.william278.net/releases' }
 }
 
 dependencies {
-compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
+    compileOnly 'net.william278.huskclaims:huskclaims-bukkit:1.5'
 }
 
 def targetJavaVersion = 21
