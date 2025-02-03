@@ -84,7 +84,6 @@ public final class MinClaimDistance extends JavaPlugin implements Listener {
                 Position.at(a.getBlockX() - minDistance, 0.0, a.getBlockZ() - minDistance, null),
                 Position.at(b.getBlockX() + minDistance, 0.0, b.getBlockZ() + minDistance, null)
         );
-        List<UserGroup> userGroups = HuskClaimsAPI.getInstance().getUserGroups(attemptingOwner);
         return claimWorld.getClaims()
                 .stream()
                 .filter((claim) -> claim.getOwner().isEmpty() || !claim.getOwner().get().equals(attemptingOwner))
