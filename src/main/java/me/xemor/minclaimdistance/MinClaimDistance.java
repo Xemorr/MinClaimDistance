@@ -11,8 +11,10 @@ import net.william278.huskclaims.claim.Region;
 import net.william278.huskclaims.event.BukkitCreateClaimEvent;
 import net.william278.huskclaims.event.BukkitResizeClaimEvent;
 import net.william278.huskclaims.position.Position;
+import net.william278.huskclaims.trust.TrustLevel;
 import net.william278.huskclaims.trust.UserGroup;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Husk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,7 +26,6 @@ import java.util.UUID;
 public final class MinClaimDistance extends JavaPlugin implements Listener {
 
     private long minDistance = 0;
-    private List<String> trustedLevels;
     private String message;
 
     @Override
@@ -33,7 +34,6 @@ public final class MinClaimDistance extends JavaPlugin implements Listener {
         this.getServer().getPluginManager().registerEvents(this, this);
         saveDefaultConfig();
         minDistance = getConfig().getInt("minDistance", 0);
-        trustedLevels = getConfig().getStringList("trustedLevels");
         message = getConfig().getString("message");
     }
 
@@ -88,18 +88,15 @@ public final class MinClaimDistance extends JavaPlugin implements Listener {
         return claimWorld.getClaims()
                 .stream()
                 .filter((claim) -> claim.getOwner().isEmpty() || !claim.getOwner().get().equals(attemptingOwner))
-                .filter((claim) -> !trustedLevels.contains(claim.getTrustedUsers().get(attemptingOwner)))
-                .filter((claim) -> !isTrustedByGroup(userGroups, claim.getTrustedGroups()))
+                .filter((claim) -> !isTrusted(claim, claimWorld, attemptingOwner))
                 .map(Claim::getRegion)
                 .anyMatch(
                         (r) -> r.overlaps(expandedRegion)
                 );
     }
 
-    public boolean isTrustedByGroup(List<UserGroup> userGroups, Map<String, String> trustedGroups) {
-        for (UserGroup userGroup : userGroups) {
-            return trustedLevels.contains(trustedGroups.get(userGroup.name()));
-        }
-        return false;
+    public boolean isTrusted(Claim claim, ClaimWorld claimWorld, UUID checkAgainst) {
+        var optionalTrustLevel = HuskClaimsAPI.getInstance().getTrustLevel(claim, claimWorld, HuskClaimsAPI.getInstance().getOnlineUser(checkAgainst));
+        return optionalTrustLevel.filter((t) -> t.getPrivileges().contains(TrustLevel.Privilege.MANAGE_CHILD_CLAIMS)).isPresent();
     }
 }
