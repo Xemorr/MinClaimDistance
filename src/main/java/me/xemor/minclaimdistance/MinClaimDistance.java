@@ -12,21 +12,17 @@ import net.william278.huskclaims.event.BukkitCreateClaimEvent;
 import net.william278.huskclaims.event.BukkitResizeClaimEvent;
 import net.william278.huskclaims.position.Position;
 import net.william278.huskclaims.trust.TrustLevel;
-import net.william278.huskclaims.trust.UserGroup;
-import org.bukkit.ChatColor;
-import org.bukkit.entity.Husk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public final class MinClaimDistance extends JavaPlugin implements Listener {
 
     private long minDistance = 0;
     private String message;
+    private boolean preventClaiming;
 
     @Override
     public void onEnable() {
@@ -35,6 +31,7 @@ public final class MinClaimDistance extends JavaPlugin implements Listener {
         saveDefaultConfig();
         minDistance = getConfig().getInt("minDistance", 0);
         message = getConfig().getString("message");
+        preventClaiming = getConfig().getBoolean("preventClaiming", true);
     }
 
     @EventHandler
@@ -42,7 +39,7 @@ public final class MinClaimDistance extends JavaPlugin implements Listener {
         if (!event.isCancelled()) {
             if (event.getClaimOwner().isPresent()) {
                 if (isClaimTooClose(event.getClaimOwner().get().getUuid(), event.getRegion(), event.getClaimWorld())) {
-                    event.setCancelled(true);
+                    if (preventClaiming) event.setCancelled(true);
                     event.getPlayer().sendMessage(
                             MiniMessage.miniMessage().deserialize(message,
                                     TagResolver.builder()
@@ -64,7 +61,7 @@ public final class MinClaimDistance extends JavaPlugin implements Listener {
                         event.getClaim().getRegion(),
                         event.getClaimWorld()
                 )) {
-                    event.setCancelled(true);
+                    if (preventClaiming) event.setCancelled(true);
                     event.getPlayer().sendMessage(
                             MiniMessage.miniMessage().deserialize(message,
                                     TagResolver.builder()
@@ -84,13 +81,11 @@ public final class MinClaimDistance extends JavaPlugin implements Listener {
                 Position.at(a.getBlockX() - minDistance, 0.0, a.getBlockZ() - minDistance, null),
                 Position.at(b.getBlockX() + minDistance, 0.0, b.getBlockZ() + minDistance, null)
         );
-        return claimWorld.getClaims()
+        return claimWorld.getParentClaimsOverlapping(expandedRegion)
                 .stream()
-                .filter((claim) -> claim.getOwner().isEmpty() || !claim.getOwner().get().equals(attemptingOwner))
-                .filter((claim) -> !isTrusted(claim, claimWorld, attemptingOwner))
-                .map(Claim::getRegion)
                 .anyMatch(
-                        (r) -> r.overlaps(expandedRegion)
+                        (claim) -> (claim.getOwner().isEmpty() || !claim.getOwner().get().equals(attemptingOwner))
+                                        && !isTrusted(claim, claimWorld, attemptingOwner)
                 );
     }
 
